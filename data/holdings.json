@@ -1,0 +1,5 @@
+[
+  { "symbol": "BTC", "quantity": 0.21, "avgPrice": 41200 },
+  { "symbol": "ETH", "quantity": 1.84, "avgPrice": 2350 },
+  { "symbol": "AAPL", "quantity": 12, "avgPrice": 172.4 }
+]
