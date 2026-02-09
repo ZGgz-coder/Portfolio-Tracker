@@ -111,6 +111,12 @@ function saveHoldings(holdings) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
 }
 
+function loadUserName() {
+  const stored = localStorage.getItem("portfolio-user-name");
+  if (stored && stored.trim()) return stored.trim();
+  return "Alejandro";
+}
+
 function parseCsvLine(line) {
   const out = [];
   let current = "";
@@ -280,8 +286,10 @@ export default function App() {
   const [csvSource, setCsvSource] = useState("CMC");
   const [csvFileName, setCsvFileName] = useState("");
   const [message, setMessage] = useState("Sigue y ajusta tus posiciones.");
+  const [showGreetingTag, setShowGreetingTag] = useState(true);
   const chartValuesRef = useRef([]);
   const animationRef = useRef(null);
+  const userName = useMemo(() => loadUserName(), []);
 
   const rows = useMemo(
     () =>
@@ -416,6 +424,16 @@ export default function App() {
       }
     };
   }, [targetChartValues]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setShowGreetingTag(window.scrollY < 32);
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const chart = useMemo(() => {
     const config = CHART_SERIES[timeframe];
@@ -568,7 +586,9 @@ export default function App() {
         <div className="profile-block">
           <div className="avatar">QW</div>
           <div>
-            <p className="mini-label">Buenos días</p>
+            <p className={`mini-label greeting-tag ${showGreetingTag ? "" : "is-hidden"}`}>
+              Buenos días, {userName}
+            </p>
             <h2>Bienvenido de nuevo</h2>
           </div>
         </div>

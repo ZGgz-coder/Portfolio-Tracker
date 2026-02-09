@@ -105,6 +105,20 @@ body {
   color: var(--muted);
 }
 
+.greeting-tag {
+  transition: opacity 180ms ease, transform 180ms ease, max-height 180ms ease;
+  max-height: 18px;
+  opacity: 1;
+  transform: translateY(0);
+  overflow: hidden;
+}
+
+.greeting-tag.is-hidden {
+  opacity: 0;
+  transform: translateY(-6px);
+  max-height: 0;
+}
+
 .topbar h2 {
   margin: 2px 0 0;
   font-size: 0.96rem;
