@@ -351,28 +351,183 @@ body {
   margin-top: 20px;
 }
 
-.mix-scroll {
+.kpi-strip {
   margin-top: 12px;
-  display: flex;
+  display: grid;
   gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 2px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.mix-item {
-  min-width: 134px;
+.kpi-card {
+  padding: 12px;
 }
 
-.mix-item p,
-.mix-item small {
-  margin: 0;
-  color: var(--muted);
-}
-
-.mix-item strong {
+.kpi-card strong {
   display: block;
-  margin: 4px 0;
-  font-size: 1.2rem;
+  margin-top: 6px;
+  font-size: 1.02rem;
+}
+
+.kpi-card small {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.quick-grid {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.compact-card {
+  padding: 12px;
+}
+
+.insight-single {
+  margin: 10px 0 0;
+  color: #e9fbff;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.action-list.compact {
+  margin-top: 10px;
+  grid-template-columns: 1fr;
+}
+
+.allocation-pill {
+  margin-top: 12px;
+  padding: 12px;
+}
+
+.allocation-bar {
+  display: flex;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.allocation-bar .segment {
+  height: 100%;
+  min-width: 8px;
+  transition: opacity 180ms ease, transform 180ms ease, filter 180ms ease;
+}
+
+.allocation-bar .segment + .segment {
+  border-left: 1px solid rgba(5, 15, 20, 0.7);
+}
+
+.allocation-bar .segment.is-dimmed {
+  opacity: 0.3;
+  filter: saturate(0.6) brightness(0.8);
+}
+
+.allocation-bar .segment.is-focused {
+  transform: scaleY(1.04);
+  filter: saturate(1.25) brightness(1.08);
+}
+
+.allocation-bar .segment.liquidity {
+  background: linear-gradient(135deg, #6de7b5, #2fd89e);
+}
+
+.allocation-bar .segment.crypto {
+  background: linear-gradient(135deg, #25e2f4, #1ab4ff);
+}
+
+.allocation-bar .segment.equities {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.14) 0 4px,
+      transparent 4px 8px
+    ),
+    linear-gradient(135deg, #b78bff, #8b5cf6);
+}
+
+.allocation-summary {
+  margin: 10px 0 2px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #eafcff;
+  letter-spacing: 0.02em;
+}
+
+.allocation-amounts {
+  margin: 0;
+  font-size: 0.67rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.allocation-legend {
+  margin: 8px 0 4px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.allocation-legend-item {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  min-width: 0;
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.allocation-legend-item:hover {
+  border-color: rgba(92, 234, 248, 0.35);
+}
+
+.allocation-legend-item.is-active {
+  border-color: rgba(92, 234, 248, 0.48);
+  background: rgba(37, 226, 244, 0.12);
+  box-shadow: 0 0 0 1px rgba(37, 226, 244, 0.15) inset;
+  transform: translateY(-1px);
+}
+
+.allocation-legend-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.allocation-legend-item .dot.liquidity {
+  background: #48ddb0;
+}
+
+.allocation-legend-item .dot.crypto {
+  background: #2ad4fb;
+}
+
+.allocation-legend-item .dot.equities {
+  background: #a871ff;
+}
+
+.allocation-legend-item .label {
+  font-size: 0.64rem;
+  color: #d7f4ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.allocation-legend-item .value {
+  margin-left: auto;
+  font-size: 0.64rem;
+  font-weight: 800;
+  color: #f2fcff;
 }
 
 .insight-grid {
@@ -472,11 +627,13 @@ body {
 }
 
 input,
+select,
 button {
   font: inherit;
 }
 
-input {
+input,
+select {
   width: 100%;
   border-radius: 10px;
   border: 1px solid var(--line);
@@ -585,5 +742,12 @@ input {
 
   .form-grid button {
     grid-column: span 4;
+  }
+}
+
+@media (max-width: 680px) {
+  .kpi-strip,
+  .quick-grid {
+    grid-template-columns: 1fr;
   }
 }

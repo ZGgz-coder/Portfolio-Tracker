@@ -63,9 +63,16 @@ const insights = [
 ];
 
 const bankAccounts = [
-  { id: "b1", name: "Santander Everyday", type: "Cuenta corriente", balance: 28450 },
-  { id: "b2", name: "BBVA Reserve", type: "Ahorro", balance: 61500 },
-  { id: "b3", name: "Revolut Cash", type: "Efectivo", balance: 12240 }
+  { id: "b1", name: "Santander Everyday", type: "Cuenta corriente", balance: 46200 },
+  { id: "b2", name: "BBVA Reserve", type: "Ahorro", balance: 54500 },
+  { id: "b3", name: "Revolut Cash", type: "Efectivo", balance: 23300 }
+];
+
+const equityEtfPositions = [
+  { id: "e1", name: "AAPL", marketValue: 37200 },
+  { id: "e2", name: "MSFT", marketValue: 33600 },
+  { id: "e3", name: "SPY", marketValue: 41100 },
+  { id: "e4", name: "QQQ", marketValue: 29800 }
 ];
 
 function money(value) {
@@ -102,6 +109,86 @@ function loadHoldings() {
 
 function saveHoldings(holdings) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
+}
+
+function parseCsvLine(line) {
+  const out = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    const next = line[index + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      current += '"';
+      index += 1;
+      continue;
+    }
+
+    if (char === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+
+    if (char === "," && !inQuotes) {
+      out.push(current.trim());
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  out.push(current.trim());
+  return out;
+}
+
+function parseHoldingsCsv(text) {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 2) return [];
+
+  const header = parseCsvLine(lines[0]).map((item) =>
+    item
+      .trim()
+      .toLowerCase()
+      .replace(/[\s_-]+/g, "")
+  );
+
+  const indexOf = (candidates) =>
+    candidates.map((candidate) => header.indexOf(candidate)).find((index) => index >= 0) ?? -1;
+
+  const symbolIndex = indexOf(["symbol", "asset", "ticker", "coin"]);
+  const quantityIndex = indexOf(["quantity", "amount", "volume", "holdings"]);
+  const avgPriceIndex = indexOf(["avgprice", "averageprice", "buyprice", "costbasis"]);
+  const currentPriceIndex = indexOf(["currentprice", "price", "last", "markprice"]);
+
+  if (symbolIndex < 0 || quantityIndex < 0 || avgPriceIndex < 0) return [];
+
+  return lines
+    .slice(1)
+    .map((line) => parseCsvLine(line))
+    .map((cols) => ({
+      symbol: String(cols[symbolIndex] || "").trim().toUpperCase(),
+      quantity: Number(cols[quantityIndex] || 0),
+      avgPrice: Number(cols[avgPriceIndex] || 0),
+      currentPrice:
+        currentPriceIndex >= 0 ? Number(cols[currentPriceIndex] || 0) : Number(cols[avgPriceIndex] || 0)
+    }))
+    .filter(
+      (item) =>
+        item.symbol &&
+        Number.isFinite(item.quantity) &&
+        Number.isFinite(item.avgPrice) &&
+        Number.isFinite(item.currentPrice) &&
+        item.quantity > 0 &&
+        item.avgPrice > 0 &&
+        item.currentPrice > 0
+    );
 }
 
 function smoothPath(points) {
@@ -185,10 +272,13 @@ export default function App() {
   const [chartValues, setChartValues] = useState([]);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [holdings, setHoldings] = useState(() => loadHoldings());
+  const [allocationFocus, setAllocationFocus] = useState("all");
   const [symbol, setSymbol] = useState("");
   const [quantity, setQuantity] = useState("");
   const [avgPrice, setAvgPrice] = useState("");
   const [currentPrice, setCurrentPrice] = useState("");
+  const [csvSource, setCsvSource] = useState("CMC");
+  const [csvFileName, setCsvFileName] = useState("");
   const [message, setMessage] = useState("Sigue y ajusta tus posiciones.");
   const chartValuesRef = useRef([]);
   const animationRef = useRef(null);
@@ -207,8 +297,75 @@ export default function App() {
 
   const bankTotal = bankAccounts.reduce((sum, item) => sum + item.balance, 0);
   const cryptoTotal = rows.reduce((sum, item) => sum + item.marketValue, 0);
-  const netWorth = bankTotal + cryptoTotal;
-  const todayDelta = rows.reduce((sum, item) => sum + item.pnl / 10, 0) + bankTotal * 0.003;
+  const defaultDigitalAssetsTotal = 128400;
+  const hasCustomDigitalAssets = cryptoTotal > 0;
+  const digitalAssetsTotal = hasCustomDigitalAssets ? cryptoTotal : defaultDigitalAssetsTotal;
+  const equitiesEtfTotal = equityEtfPositions.reduce((sum, item) => sum + item.marketValue, 0);
+  const allocationTotal = bankTotal + digitalAssetsTotal + equitiesEtfTotal;
+  const netWorth = allocationTotal;
+  const liquidityPct = allocationTotal > 0 ? (bankTotal / allocationTotal) * 100 : 0;
+  const cryptoPct = allocationTotal > 0 ? (digitalAssetsTotal / allocationTotal) * 100 : 0;
+  const equitiesPct = allocationTotal > 0 ? (equitiesEtfTotal / allocationTotal) * 100 : 0;
+  const digitalAssetsDelta = hasCustomDigitalAssets
+    ? rows.reduce((sum, item) => sum + item.pnl / 10, 0)
+    : digitalAssetsTotal * 0.0022;
+  const todayDelta =
+    digitalAssetsDelta +
+    bankTotal * 0.003 +
+    equitiesEtfTotal * 0.0012;
+  const allocationItems = [
+    { key: "liquidity", label: "Liquidez", pct: liquidityPct, amount: bankTotal },
+    { key: "crypto", label: "Activos digitales", pct: cryptoPct, amount: digitalAssetsTotal },
+    { key: "equities", label: "Acc/ETF", pct: equitiesPct, amount: equitiesEtfTotal }
+  ];
+  const topMovers = useMemo(() => {
+    const dynamic = rows.map((item) => ({
+      name: item.symbol,
+      change: item.pnlPct,
+      amount: item.marketValue
+    }));
+
+    const fallback = marketWatch.map((item) => ({
+      name: item.ticker,
+      change: item.change,
+      amount: item.value
+    }));
+
+    return (dynamic.length > 0 ? dynamic : fallback)
+      .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+      .slice(0, 3);
+  }, [rows]);
+
+  const largestPosition = useMemo(() => {
+    const all = [
+      ...rows.map((item) => ({ name: item.symbol, value: item.marketValue })),
+      ...equityEtfPositions.map((item) => ({ name: item.name, value: item.marketValue }))
+    ];
+    if (all.length === 0) return { name: "-", value: 0, pct: 0 };
+    const best = all.sort((a, b) => b.value - a.value)[0];
+    return {
+      ...best,
+      pct: allocationTotal > 0 ? (best.value / allocationTotal) * 100 : 0
+    };
+  }, [rows, allocationTotal]);
+
+  const mainAlert = useMemo(() => {
+    if (cryptoPct > 45) return "Exposición cripto alta: considera rebalanceo parcial.";
+    if (liquidityPct < 12) return "Liquidez baja: aumenta caja para reducir riesgo.";
+    if (largestPosition.pct > 28) {
+      return `Concentración elevada en ${largestPosition.name} (${largestPosition.pct.toFixed(1)}%).`;
+    }
+    return "Portfolio equilibrado: no hay alertas críticas ahora mismo.";
+  }, [cryptoPct, liquidityPct, largestPosition]);
+
+  const dashboardActivity = useMemo(
+    () => [
+      { title: "Activos en cartera", detail: `${rows.length + equityEtfPositions.length} posiciones` },
+      { title: "Liquidez disponible", detail: money(bankTotal) },
+      { title: "Delta estimado hoy", detail: `${money(todayDelta)} (${pct((todayDelta / (netWorth || 1)) * 100)})` }
+    ],
+    [rows.length, bankTotal, todayDelta, netWorth]
+  );
 
   const targetChartValues = useMemo(() => {
     const config = CHART_SERIES[timeframe];
@@ -375,6 +532,34 @@ export default function App() {
     setMessage(`Eliminado ${targetSymbol}`);
   };
 
+  const importHoldingsCsv = async (file) => {
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = parseHoldingsCsv(text);
+
+      if (parsed.length === 0) {
+        setMessage("No se detectaron holdings válidos en el CSV.");
+        setCsvFileName(file.name);
+        return;
+      }
+
+      const merged = new Map();
+      [...holdings, ...parsed].forEach((item) => {
+        merged.set(item.symbol, item);
+      });
+
+      const next = Array.from(merged.values()).sort((a, b) => a.symbol.localeCompare(b.symbol));
+      setHoldings(next);
+      saveHoldings(next);
+      setCsvFileName(file.name);
+      setMessage(`Importados ${parsed.length} holdings desde ${csvSource}.`);
+    } catch {
+      setMessage("Error leyendo el archivo CSV.");
+    }
+  };
+
   return (
     <main className="app-shell">
       <div className="aurora-bg" />
@@ -383,7 +568,7 @@ export default function App() {
         <div className="profile-block">
           <div className="avatar">QW</div>
           <div>
-            <p className="mini-label">Good Morning</p>
+            <p className="mini-label">Buenos días</p>
             <h2>Bienvenido de nuevo</h2>
           </div>
         </div>
@@ -399,6 +584,24 @@ export default function App() {
               <span>.{money(netWorth).split(".")[1] || "00"}</span>
             </h1>
             <div className="delta-pill up">{money(todayDelta)} ({pct((todayDelta / (netWorth || 1)) * 100)}) hoy</div>
+          </section>
+
+          <section className="kpi-strip">
+            <article className="glass card kpi-card">
+              <p className="mini-label">PnL No Realizado</p>
+              <strong className={rows.reduce((sum, item) => sum + item.pnl, 0) >= 0 ? "up" : "down"}>
+                {money(rows.reduce((sum, item) => sum + item.pnl, 0))}
+              </strong>
+            </article>
+            <article className="glass card kpi-card">
+              <p className="mini-label">Mayor Posición</p>
+              <strong>{largestPosition.name}</strong>
+              <small>{largestPosition.pct.toFixed(1)}%</small>
+            </article>
+            <article className="glass card kpi-card">
+              <p className="mini-label">% Liquidez</p>
+              <strong>{liquidityPct.toFixed(1)}%</strong>
+            </article>
           </section>
 
           <section className="glass card chart-card">
@@ -536,54 +739,102 @@ export default function App() {
           </section>
 
           <section className="mix-section">
-                <h3 className="section-subtitle">Desglose de asignación</h3>
-            <div className="mix-scroll">
-              <article className="glass card mix-item">
-                <p>Crypto</p>
-                <strong>{cryptoTotal > 0 ? `${((cryptoTotal / netWorth) * 100).toFixed(0)}%` : "0%"}</strong>
-                <small>{money(cryptoTotal)}</small>
-              </article>
-              <article className="glass card mix-item">
-                <p>Bank</p>
-                <strong>{((bankTotal / netWorth) * 100).toFixed(0)}%</strong>
-                <small>{money(bankTotal)}</small>
-              </article>
-              <article className="glass card mix-item">
-                <p>Colchón de liquidez</p>
-                <strong>8%</strong>
-                <small>{money(netWorth * 0.08)}</small>
-              </article>
+            <h3 className="section-subtitle">Desglose de asignación</h3>
+            <div className="glass card allocation-pill">
+              <div className="allocation-bar" aria-label="Distribución del patrimonio">
+                {allocationItems.map((item) => (
+                  <span
+                    key={`seg-${item.key}`}
+                    className={`segment ${item.key} ${allocationFocus !== "all" && allocationFocus !== item.key ? "is-dimmed" : ""} ${allocationFocus === item.key ? "is-focused" : ""}`}
+                    style={{ width: `${item.pct}%` }}
+                  />
+                ))}
+              </div>
+              <p className="allocation-summary">
+                Liquidez {liquidityPct.toFixed(0)}% · Activos digitales {cryptoPct.toFixed(0)}% · Acc/ETF {equitiesPct.toFixed(0)}%
+              </p>
+              <div className="allocation-legend" aria-label="Leyenda de asignación">
+                {allocationItems.map((item) => (
+                  <button
+                    key={`legend-${item.key}`}
+                    type="button"
+                    className={`allocation-legend-item ${allocationFocus === item.key ? "is-active" : ""}`}
+                    onMouseEnter={() => setAllocationFocus(item.key)}
+                    onMouseLeave={() => setAllocationFocus("all")}
+                    onClick={() => setAllocationFocus((current) => (current === item.key ? "all" : item.key))}
+                  >
+                    <span className={`dot ${item.key}`} />
+                    <span className="label">{item.label}</span>
+                    <span className="value">{item.pct.toFixed(0)}%</span>
+                  </button>
+                ))}
+              </div>
+              <p className="allocation-amounts">
+                {money(bankTotal)} · {money(digitalAssetsTotal)} · {money(equitiesEtfTotal)}
+              </p>
             </div>
+          </section>
+
+          <section className="quick-grid">
+            <article className="glass card compact-card">
+              <h3 className="section-subtitle">Top movimientos</h3>
+              <div className="holding-list">
+                {topMovers.map((item) => (
+                  <article key={`${item.name}-${item.change}`} className="glass card holding-row compact">
+                    <div>
+                      <p>{item.name}</p>
+                      <small>{money(item.amount)}</small>
+                    </div>
+                    <span className={item.change >= 0 ? "up" : "down"}>{pct(item.change)}</span>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <article className="glass card compact-card">
+              <h3 className="section-subtitle">Riesgo rápido</h3>
+              <div className="holding-list">
+                <article className="glass card holding-row compact">
+                  <div><p>Concentración máx.</p><small>{largestPosition.name}</small></div>
+                  <strong>{largestPosition.pct.toFixed(1)}%</strong>
+                </article>
+                <article className="glass card holding-row compact">
+                  <div><p>Liquidez</p><small>Cash disponible</small></div>
+                  <strong>{liquidityPct.toFixed(1)}%</strong>
+                </article>
+              </div>
+            </article>
+          </section>
+
+          <section className="quick-grid">
+            <article className="glass card compact-card">
+              <h3 className="section-subtitle">Alerta principal</h3>
+              <p className="insight-single">{mainAlert}</p>
+            </article>
+            <article className="glass card compact-card">
+              <h3 className="section-subtitle">Acciones rápidas</h3>
+              <div className="action-list compact">
+                <button type="button" className="ghost action-btn" onClick={() => setScreen("settings")}>
+                  Añadir/Importar datos
+                </button>
+                <button type="button" className="ghost action-btn" onClick={() => setScreen("wealth")}>
+                  Ver patrimonio
+                </button>
+                <button type="button" className="ghost action-btn" onClick={() => setScreen("markets")}>
+                  Revisar mercados
+                </button>
+              </div>
+            </article>
           </section>
 
           <section className="insights-section">
-            <h3 className="section-subtitle">Insights inteligentes</h3>
-            <div className="insight-grid">
-              {insights.map((item) => (
-                <article key={item.id} className={`glass card insight ${item.tone}`}>
-                  <p className="insight-kind">{item.kind}</p>
-                  <h4>{item.title}</h4>
-                  <small>{item.note}</small>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="holdings-section">
-            <div className="holdings-head">
-              <h3 className="section-subtitle">Principales posiciones</h3>
-              <button className="text-btn" type="button" onClick={() => setScreen("wealth")}>Ver todo</button>
-            </div>
+            <h3 className="section-subtitle">Actividad reciente</h3>
             <div className="holding-list">
-              {marketWatch.map((item) => (
-                <article key={item.ticker} className="glass card holding-row">
+              {dashboardActivity.map((item) => (
+                <article key={item.title} className="glass card holding-row compact">
                   <div>
-                    <p>{item.name}</p>
-                    <small>{item.ticker}</small>
-                  </div>
-                  <div className="holding-price">
-                    <strong>{item.value > 1000 ? money(item.value) : String(item.value)}</strong>
-                    <span className={item.change >= 0 ? "up" : "down"}>{pct(item.change)}</span>
+                    <p>{item.title}</p>
+                    <small>{item.detail}</small>
                   </div>
                 </article>
               ))}
@@ -607,29 +858,26 @@ export default function App() {
             ))}
           </div>
 
-          <h3 className="inner-title">Editor de cripto</h3>
-          <form className="form-grid" onSubmit={submitHolding}>
-            <input value={symbol} onChange={(event) => setSymbol(event.target.value)} placeholder="Símbolo" />
-            <input type="number" min="0" step="any" value={quantity} onChange={(event) => setQuantity(event.target.value)} placeholder="Cantidad" />
-            <input type="number" min="0" step="any" value={avgPrice} onChange={(event) => setAvgPrice(event.target.value)} placeholder="Precio medio" />
-            <input type="number" min="0" step="any" value={currentPrice} onChange={(event) => setCurrentPrice(event.target.value)} placeholder="Actual" />
-            <button type="submit">Guardar posición</button>
-          </form>
-          <p className="mini-label">{message}</p>
-
+          <h3 className="inner-title">Activos digitales en cartera</h3>
           <div className="holding-list">
-            {rows.map((item) => (
-              <article key={item.symbol} className="glass card holding-row compact">
-                <div>
-                  <p>{item.symbol}</p>
-                  <small>{item.quantity}</small>
-                </div>
-                <div className="holding-price">
-                  <strong>{money(item.marketValue)}</strong>
-                  <button type="button" className="danger" onClick={() => removeHolding(item.symbol)}>Eliminar</button>
-                </div>
+            {rows.length === 0 ? (
+              <article className="glass card holding-row compact">
+                <p>No hay holdings cargados todavía.</p>
               </article>
-            ))}
+            ) : (
+              rows.map((item) => (
+                <article key={item.symbol} className="glass card holding-row compact">
+                  <div>
+                    <p>{item.symbol}</p>
+                    <small>{item.quantity}</small>
+                  </div>
+                  <div className="holding-price">
+                    <strong>{money(item.marketValue)}</strong>
+                    <span className={item.pnl >= 0 ? "up" : "down"}>{pct(item.pnlPct)}</span>
+                  </div>
+                </article>
+              ))
+            )}
           </div>
         </section>
       ) : null}
@@ -671,6 +919,49 @@ export default function App() {
           <div className="holding-list">
             <article className="glass card holding-row compact"><p>Moneda base</p><small>USD</small></article>
             <article className="glass card holding-row compact"><p>Sincronización de datos</p><small>Modo manual</small></article>
+          </div>
+
+          <h3 className="inner-title">Gestión de datos</h3>
+          <form className="form-grid" onSubmit={submitHolding}>
+            <input value={symbol} onChange={(event) => setSymbol(event.target.value)} placeholder="Símbolo" />
+            <input type="number" min="0" step="any" value={quantity} onChange={(event) => setQuantity(event.target.value)} placeholder="Cantidad" />
+            <input type="number" min="0" step="any" value={avgPrice} onChange={(event) => setAvgPrice(event.target.value)} placeholder="Precio medio" />
+            <input type="number" min="0" step="any" value={currentPrice} onChange={(event) => setCurrentPrice(event.target.value)} placeholder="Precio actual" />
+            <button type="submit">Guardar holding</button>
+          </form>
+
+          <div className="form-grid">
+            <select value={csvSource} onChange={(event) => setCsvSource(event.target.value)}>
+              <option value="CMC">CSV de CMC</option>
+              <option value="XTB">CSV de XTB</option>
+            </select>
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(event) => importHoldingsCsv(event.target.files?.[0])}
+            />
+          </div>
+          {csvFileName ? <p className="mini-label">Archivo cargado: {csvFileName}</p> : null}
+          <p className="mini-label">{message}</p>
+
+          <h3 className="inner-title">Holdings actuales</h3>
+          <div className="holding-list">
+            {rows.length === 0 ? (
+              <article className="glass card holding-row compact"><p>No hay holdings.</p></article>
+            ) : (
+              rows.map((item) => (
+                <article key={item.symbol} className="glass card holding-row compact">
+                  <div>
+                    <p>{item.symbol}</p>
+                    <small>{item.quantity} · {money(item.avgPrice)}</small>
+                  </div>
+                  <div className="holding-price">
+                    <strong>{money(item.marketValue)}</strong>
+                    <button type="button" className="danger" onClick={() => removeHolding(item.symbol)}>Eliminar</button>
+                  </div>
+                </article>
+              ))
+            )}
           </div>
         </section>
       ) : null}
