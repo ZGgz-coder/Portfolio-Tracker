@@ -15,6 +15,15 @@
   --radius-widget: 24px;
   --radius-card: 18px;
   --radius-chip: 12px;
+  --teal-glow:    rgba(42,167,161,0.9);
+  --teal-faint:   rgba(42,167,161,0.08);
+  --teal-border:  rgba(42,167,161,0.3);
+  --coral:        rgba(220,60,60,0.9);
+  --coral-faint:  rgba(220,60,60,0.08);
+  --coral-border: rgba(220,60,60,0.22);
+  --amber:        rgba(224,122,63,0.9);
+  --amber-faint:  rgba(224,122,63,0.08);
+  --amber-border: rgba(224,122,63,0.28);
 }
 
 * {
@@ -195,3 +204,7 @@ input {
 .qw-tab-scroll::-webkit-scrollbar {
   display: none;
 }
+
+.qw-hero    { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+.qw-h2      { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; }
+.qw-caption { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.04em; }
