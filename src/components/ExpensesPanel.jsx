@@ -27,6 +27,8 @@ function dd(n) {
   return Math.ceil((n - new Date()) / (1000 * 60 * 60 * 24));
 }
 
+const HISTORY_KEY = "qw-expenses-monthly-history-v1";
+
 const categoryColor = {
   Streaming: "#8b5cf6",
   Seguros: "#ff7d90",
@@ -59,6 +61,9 @@ export default function ExpensesPanel() {
   const [sortBy, setSortBy] = useState("name");
   const [sortDir, setSortDir] = useState("asc");
   const [budget, setBudget] = useState(() => Number(localStorage.getItem("qw-expenses-budget") || 0));
+  const [monthlyHistory, setMonthlyHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "{}"); } catch { return {}; }
+  });
   const [simResult, setSimResult] = useState("Selecciona una suscripción para simular");
   const [chartTip, setChartTip] = useState(null);
   const chartRef = useRef(null);
@@ -66,6 +71,11 @@ export default function ExpensesPanel() {
   useEffect(() => {
     localStorage.setItem("qw-expenses-budget", String(budget || 0));
   }, [budget]);
+
+
+  useEffect(() => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(monthlyHistory));
+  }, [monthlyHistory]);
 
   async function reload() {
     const r = await fetch("/api/expenses");
@@ -92,7 +102,17 @@ export default function ExpensesPanel() {
 
   const totalMes = useMemo(() => items.reduce((a, g) => a + mensualEq(g), 0), [items]);
   const totalAnio = totalMes * 12;
-  const prevMes = totalMes * 0.93;
+
+  useEffect(() => {
+    const now = new Date();
+    const k = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+    setMonthlyHistory((prev) => (prev[k] === totalMes ? prev : { ...prev, [k]: totalMes }));
+  }, [totalMes]);
+
+  const prevMonthDate = new Date();
+  prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+  const prevKey = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth()+1).padStart(2,"0")}`;
+  const prevMes = Number(monthlyHistory[prevKey] || totalMes * 0.93);
   const delta = totalMes - prevMes;
   const budgetPct = budget > 0 ? Math.min(100, (totalMes / budget) * 100) : 0;
 
@@ -114,11 +134,18 @@ export default function ExpensesPanel() {
   }, [items]);
 
   const trendData = useMemo(() => {
-    const base = totalMes || 1;
-    const current = [0.92, 0.95, 0.98, 1.0, 1.03, 1.07].map((m) => base * m);
-    const previous = current.map((v) => v * 0.92);
+    const now = new Date();
+    const current = [];
+    const previous = [];
+    for (let i = 5; i >= 0; i -= 1) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const val = Number(monthlyHistory[k] || totalMes || 1);
+      current.push(val);
+      previous.push(val * 0.92);
+    }
     return { current, previous };
-  }, [totalMes]);
+  }, [monthlyHistory, totalMes]);
 
   async function saveExpense(payload) {
     await fetch("/api/expenses", {
@@ -183,6 +210,30 @@ export default function ExpensesPanel() {
     const monthly = mensualEq(item);
     const annual = monthly * 12;
     setSimResult(`Si cancelas “${item.concepto}”: ahorras ${eur(annual)}/año. Nuevo mensual: ${eur(totalMes - monthly)}.`);
+  }
+
+  function exportCsv() {
+    const rows = [
+      ["Concepto", "Monto", "Categoria", "Recurrencia", "Dia", "Inicio", "Metodo", "Rating"],
+      ...items.map((i) => [i.concepto, i.monto, i.categoria, i.recurrencia, i.dia, i.inicio || "", i.metodo || "", i.rating || 0])
+    ];
+    const esc = (v) => `"${String(v).replaceAll('"', '""')}"`;
+    const csv = rows.map((r) => r.map((v) => esc(v)).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "qw-gastos.csv";
+    a.click();
+  }
+
+  function exportPdf() {
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Resumen gastos</title><style>body{font-family:Arial;padding:24px}h1{margin:0 0 12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left}</style></head><body><h1>Quantum Wealth · Resumen gastos</h1><p>Total mensual: ${eur(totalMes)} · Total anual: ${eur(totalAnio)} · Activas: ${items.length}</p><table><thead><tr><th>Concepto</th><th>Monto</th><th>Categoria</th><th>Recurrencia</th><th>Día</th></tr></thead><tbody>${items.map(i=>`<tr><td>${i.concepto}</td><td>${eur(i.monto)}</td><td>${i.categoria}</td><td>${i.recurrencia}</td><td>${i.dia}</td></tr>`).join("")}</tbody></table></body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.print();
   }
 
   function exportSummaryPng() {
@@ -366,6 +417,8 @@ export default function ExpensesPanel() {
 
       <div className="actions" style={{ marginTop: 10 }}>
         <button type="button" onClick={exportSummaryPng}>Exportar resumen PNG</button>
+        <button type="button" onClick={exportCsv}>Exportar CSV (Excel)</button>
+        <button type="button" onClick={exportPdf}>Exportar PDF</button>
       </div>
     </section>
   );
