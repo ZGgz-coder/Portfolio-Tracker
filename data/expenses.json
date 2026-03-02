@@ -1,0 +1,62 @@
+[
+  {
+    "id": "e4f53a88-57d5-4854-894e-c854fc45407c",
+    "concepto": "Apple Care iPhone",
+    "monto": 11.99,
+    "categoria": "Seguros",
+    "recurrencia": "Mensual",
+    "dia": 24,
+    "inicio": "2026-01-01",
+    "metodo": "Tarjeta",
+    "rating": 5,
+    "history": []
+  },
+  {
+    "id": "48d29703-a62b-4449-84a8-acd1065280cc",
+    "concepto": "Apple Care Apple Watch Ultra",
+    "monto": 5.49,
+    "categoria": "Seguros",
+    "recurrencia": "Mensual",
+    "dia": 24,
+    "inicio": "2026-01-01",
+    "metodo": "Tarjeta",
+    "rating": 5,
+    "history": []
+  },
+  {
+    "id": "d1fc4609-013d-4c3e-a3bc-a12efe296701",
+    "concepto": "Apple One",
+    "monto": 34.95,
+    "categoria": "Streaming",
+    "recurrencia": "Mensual",
+    "dia": 17,
+    "inicio": "2026-01-01",
+    "metodo": "Tarjeta",
+    "rating": 4,
+    "history": []
+  },
+  {
+    "id": "23e77c87-e4b0-4c09-b038-cefb9a597f3d",
+    "concepto": "Claude Pro",
+    "monto": 21.78,
+    "categoria": "IA",
+    "recurrencia": "Mensual",
+    "dia": 23,
+    "inicio": "2026-02-01",
+    "metodo": "Tarjeta",
+    "rating": 3,
+    "history": []
+  },
+  {
+    "id": "8d039008-fb98-489c-81e1-28365dc99b59",
+    "concepto": "Google One (Gemini Pro + 200GB)",
+    "monto": 7.99,
+    "categoria": "Cloud",
+    "recurrencia": "Mensual",
+    "dia": 12,
+    "inicio": "2026-01-01",
+    "metodo": "Tarjeta",
+    "rating": 2,
+    "history": []
+  }
+]
