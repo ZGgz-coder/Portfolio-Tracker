@@ -1,0 +1,27 @@
+{
+  "sheet": "Invoice Template",
+  "cells": {
+    "invoice_code": "A1",
+    "issue_date": "E1",
+    "client_name": "B4",
+    "client_tax_id": "B5",
+    "client_address": "B6",
+    "client_city": "B7",
+    "client_postal": "B8",
+    "notes": "A46",
+    "hash": "A47",
+    "subtotal_value": "F41",
+    "tax_value": "F42",
+    "total_value": "F43"
+  },
+  "table": {
+    "start_row": 11,
+    "max_rows": 28,
+    "columns": {
+      "description": "A",
+      "qty": "D",
+      "unit_price": "E",
+      "subtotal": "F"
+    }
+  }
+}

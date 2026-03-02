@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <title>FactuApp</title>
+    <link rel="stylesheet" href="/styles.css?v=2" />
+  </head>
+  <body>
+    <div class="app-shell">
+
+      <!-- ── SIDEBAR ── -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="brand-logo">F</div>
+          <span class="brand-name">FactuApp</span>
+        </div>
+        <nav class="sidebar-nav" aria-label="Navegacion principal">
+          <button class="tab nav-item is-active" data-tab="invoices">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Facturas
+          </button>
+          <button class="tab nav-item" data-tab="clients">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Clientes
+          </button>
+          <button class="tab nav-item" data-tab="dashboard">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Dashboard
+          </button>
+          <button class="tab nav-item" data-tab="history">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Historico
+          </button>
+        </nav>
+        <div class="sidebar-footer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          Arteclima 2020 SLU
+        </div>
+      </aside>
+
+      <!-- ── MAIN ── -->
+      <div class="main-content">
+        <header class="topbar">
+          <h1 class="topbar-title" id="topbar-title">Facturas</h1>
+          <div id="toast" class="toast" hidden></div>
+        </header>
+
+        <div class="content-area">
+          <section id="banner" class="banner" hidden>
+            <span id="banner-msg"></span>
+            <button class="banner-close" id="banner-close" aria-label="Cerrar">×</button>
+          </section>
+
+          <!-- ══ INVOICES TAB ══ -->
+          <section id="tab-invoices" class="panel">
+
+            <!-- VIEW: LIST (default) -->
+            <div id="inv-list-view">
+
+              <!-- ── Header + filters ── -->
+              <div class="list-hero">
+                <div class="list-hero-top">
+                  <div>
+                    <h2 class="view-title">Tus facturas</h2>
+                    <p class="muted-text">Crea, oficializa y exporta tus facturas</p>
+                  </div>
+                </div>
+                <div class="list-filters">
+                  <input id="list-search" class="filter-input filter-search" type="text" placeholder="Buscar numero o cliente..." />
+                  <select id="list-filter-status" class="filter-input">
+                    <option value="">Todos los estados</option>
+                    <option value="DRAFT">Borrador</option>
+                    <option value="OFFICIAL">Enviada</option>
+                    <option value="PAID">Pagada</option>
+                    <option value="SPECIAL">Especial</option>
+                  </select>
+                  <select id="list-filter-client" class="filter-input">
+                    <option value="">Todos los clientes</option>
+                  </select>
+                  <input id="list-filter-year" class="filter-input filter-year" type="number" min="2000" max="2100" placeholder="Año" />
+                </div>
+              </div>
+
+              <!-- ── Creation card ── -->
+              <div class="creation-card">
+                <div class="create-modes">
+                  <button id="create-mode-manual" class="create-mode-btn is-active" type="button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+                    Nueva factura manual
+                  </button>
+                  <button class="create-mode-btn" type="button" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    Nueva factura con IA
+                    <span class="badge-soon">Próximamente</span>
+                  </button>
+                </div>
+
+                <!-- ── Inline form ── -->
+                <div id="inline-create-form" class="inline-create-form" hidden>
+                  <div class="inline-form-grid">
+                    <!-- Client autocomplete -->
+                    <div class="field">
+                      <label class="field-label">Cliente</label>
+                      <div class="client-autocomplete">
+                        <input id="inline-client-input" type="text" placeholder="Buscar cliente..." autocomplete="off" />
+                        <div id="inline-client-dropdown" class="client-dropdown" hidden></div>
+                      </div>
+                      <!-- Mini inline client form -->
+                      <div id="inline-new-client-form" class="mini-client-form" hidden>
+                        <div class="mini-client-grid">
+                          <input id="nc-name"    type="text"  placeholder="Nombre *" required />
+                          <input id="nc-tax"     type="text"  placeholder="CIF/NIF" />
+                          <input id="nc-address" type="text"  placeholder="Dirección" />
+                          <input id="nc-email"   type="email" placeholder="Email" />
+                          <input id="nc-phone"   type="text"  placeholder="Teléfono" />
+                        </div>
+                        <div class="mini-client-actions">
+                          <button id="nc-cancel" type="button" class="ghost btn-sm">Cancelar</button>
+                          <button id="nc-save"   type="button" class="btn-sm">Crear cliente</button>
+                        </div>
+                      </div>
+                      <input id="inline-client-id" type="hidden" />
+                    </div>
+                    <!-- Date -->
+                    <div class="field">
+                      <label class="field-label">Fecha de emisión</label>
+                      <input id="inline-invoice-date" type="date" />
+                    </div>
+                  </div>
+
+                  <!-- Lines table -->
+                  <div class="section-header mt-field">
+                    <span class="section-label">Líneas de factura</span>
+                    <button id="inline-add-line" type="button" class="ghost btn-sm">+ Añadir línea</button>
+                  </div>
+                  <div class="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Descripción</th>
+                          <th class="col-sm">Cant.</th>
+                          <th class="col-md">Precio unit.</th>
+                          <th class="col-sm">% IVA</th>
+                          <th class="col-sm">Dto.%</th>
+                          <th class="col-md" style="text-align:right">Total línea</th>
+                          <th class="col-action"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="inline-lines-body"></tbody>
+                    </table>
+                  </div>
+                  <p id="inline-lines-thead-hint" style="font-size:12px;color:var(--muted);margin:4px 0 0">Columnas: Descripción · Cant. · Precio unit. · % IVA · Dto.% · Total</p>
+
+                  <!-- Totals preview -->
+                  <div class="totals-preview">
+                    <span>Base: <strong id="inline-total-base">0,00 €</strong></span>
+                    <span>IVA (21%): <strong id="inline-total-iva">0,00 €</strong></span>
+                    <span class="totals-preview-final">Total: <strong id="inline-total-final">0,00 €</strong></span>
+                  </div>
+
+                  <!-- Notes + actions -->
+                  <div class="field mt-field">
+                    <label class="field-label">Notas internas</label>
+                    <textarea id="inline-notes" rows="2" placeholder="Observaciones opcionales..."></textarea>
+                  </div>
+                  <div class="card-actions">
+                    <button id="inline-cancel-btn" type="button" class="ghost">Cancelar</button>
+                    <button id="inline-save-btn" type="button">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                      Guardar borrador
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ── Invoices table ── -->
+              <div class="card">
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th class="sortable-th" data-sort="official_code">Nº Factura <span class="sort-icon">↕</span></th>
+                        <th class="sortable-th" data-sort="issue_date">Fecha <span class="sort-icon">↕</span></th>
+                        <th>Cliente</th>
+                        <th>Estado</th>
+                        <th class="sortable-th col-num" data-sort="subtotal">Base <span class="sort-icon">↕</span></th>
+                        <th class="sortable-th col-num" data-sort="tax_amount">IVA <span class="sort-icon">↕</span></th>
+                        <th class="sortable-th col-num" data-sort="total">Total <span class="sort-icon">↕</span></th>
+                        <th class="col-action"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="recent-invoices-body">
+                      <tr><td colspan="8" class="empty-state">Cargando facturas...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW: CREATE -->
+            <div id="inv-create-view" hidden>
+              <div class="view-nav">
+                <button id="back-to-list" class="ghost btn-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  Cancelar
+                </button>
+                <h2 class="view-title">Nueva factura</h2>
+                <div></div>
+              </div>
+
+              <!-- Mode choice cards -->
+              <div class="mode-cards-grid">
+                <button class="mode-card is-active" data-mode="manual">
+                  <span class="mode-icon">📋</span>
+                  <strong>Manual</strong>
+                  <span class="mode-desc">Elige cliente, añade líneas y precios tú mismo</span>
+                </button>
+                <button class="mode-card" data-mode="intelligent">
+                  <span class="mode-icon">✨</span>
+                  <strong>Automatica</strong>
+                  <span class="mode-desc">Describe la factura en texto libre y la creamos por ti</span>
+                </button>
+              </div>
+
+              <!-- Hidden radio inputs for JS compatibility -->
+              <div class="sr-only" aria-hidden="true">
+                <input type="radio" name="mode" value="manual" checked />
+                <input type="radio" name="mode" value="intelligent" />
+                <input type="radio" name="mode" value="special" />
+                <span id="special-badge" class="badge warning" hidden>NO OFICIAL</span>
+                <button id="create-special-btn" type="button" hidden>Crear especial</button>
+              </div>
+
+              <div class="card">
+                <!-- Client + Date -->
+                <div class="card-section">
+                  <div class="form-grid">
+                    <div class="field">
+                      <label class="field-label">Cliente</label>
+                      <div class="field-row">
+                        <input id="client-search" type="text" placeholder="Buscar cliente..." />
+                        <button id="open-client-modal" type="button" class="ghost btn-sm">+ Nuevo</button>
+                      </div>
+                      <select id="client-select">
+                        <option value="">-- Selecciona cliente --</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Fecha de emision</label>
+                      <input id="invoice-date" type="date" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Intelligent block -->
+                <div id="intelligent-block" class="card-section" hidden>
+                  <div class="guide-tip">
+                    <div class="guide-tip-header">
+                      <span>💡</span>
+                      <strong>Como redactar tu factura automatica</strong>
+                    </div>
+                    <ul class="guide-list">
+                      <li>Indica el <strong>cliente</strong> si no lo has seleccionado arriba: <code>Cliente: Bar Renato</code></li>
+                      <li>Cada concepto: <code>[descripcion] x [cantidad] @ [precio]</code></li>
+                      <li>Ejemplos: <code>Instalacion split x 2 @ 450,00</code> &middot; <code>Mantenimiento x 1 @ 120</code></li>
+                      <li>Incluye notas finales o cualquier detalle adicional que necesites</li>
+                    </ul>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">Describe la factura</label>
+                    <textarea id="free-text" rows="7" placeholder="Ejemplo:&#10;Instalacion split Samsung x 2 @ 450,00&#10;Mantenimiento preventivo anual x 1 @ 120,00&#10;Desplazamiento x 1 @ 30"></textarea>
+                  </div>
+                  <div class="card-actions">
+                    <button id="interpret-btn" type="button">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                      Interpretar y crear factura
+                    </button>
+                  </div>
+                  <ul id="parser-warnings" class="warnings"></ul>
+                </div>
+
+                <!-- Manual block -->
+                <div id="manual-block" class="card-section">
+                  <div class="section-header">
+                    <span class="section-label">Lineas de factura</span>
+                    <button id="add-line-create" type="button" class="ghost btn-sm">+ Anadir linea</button>
+                  </div>
+                  <div class="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Descripcion</th>
+                          <th class="col-sm">Cant.</th>
+                          <th class="col-sm">Unidad</th>
+                          <th class="col-md">Precio unit.</th>
+                          <th class="col-action"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="create-lines-body"></tbody>
+                    </table>
+                  </div>
+                  <div class="field mt-field">
+                    <label class="field-label">Notas internas</label>
+                    <textarea id="create-notes" rows="2" placeholder="Observaciones opcionales..."></textarea>
+                  </div>
+                  <div class="card-actions">
+                    <button id="create-invoice-btn" type="button">Guardar borrador</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW: SUMMARY -->
+            <div id="inv-summary-view" hidden>
+              <div class="view-nav">
+                <button id="back-to-list-2" class="ghost btn-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  Facturas
+                </button>
+                <h2 class="view-title">Detalle de factura</h2>
+                <button id="new-invoice-from-summary" class="btn-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Nueva factura
+                </button>
+              </div>
+
+              <div class="card">
+                <div id="invoice-meta" class="invoice-meta">Sin factura cargada.</div>
+
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Descripcion</th>
+                        <th class="col-sm">Cant.</th>
+                        <th class="col-sm">Unidad</th>
+                        <th class="col-md">Precio unit.</th>
+                        <th class="col-md">Total</th>
+                        <th class="col-action"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="preview-lines-body"></tbody>
+                  </table>
+                </div>
+
+                <div class="field mt-field card-pad">
+                  <label class="field-label">Notas</label>
+                  <textarea id="preview-notes" rows="2" disabled></textarea>
+                </div>
+
+                <div class="totals-block">
+                  <div class="totals-row">
+                    <span>Base imponible</span>
+                    <strong id="total-base">0.00</strong>
+                  </div>
+                  <div class="totals-row">
+                    <span>IVA</span>
+                    <strong id="total-iva">0.00</strong>
+                  </div>
+                  <div class="totals-row totals-final">
+                    <span>Total</span>
+                    <strong id="total-final">0.00</strong>
+                  </div>
+                </div>
+
+                <div id="official-number" class="official-number" hidden></div>
+
+                <div class="card-actions card-pad">
+                  <button id="add-line-preview" class="ghost btn-sm" disabled>+ Linea</button>
+                  <button id="save-draft-btn" class="ghost" disabled>Guardar borrador</button>
+                  <button id="officialize-btn" disabled>Oficializar</button>
+                  <div id="officialize-error" class="action-error" hidden></div>
+                  <button id="export-pdf-btn" class="ghost export-btn" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    PDF
+                  </button>
+                  <button id="export-xlsx-btn" class="ghost export-btn" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- ══ CLIENTS TAB ══ -->
+          <section id="tab-clients" class="panel" hidden>
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Clientes</h2>
+                <div class="inline">
+                  <button id="reload-clients" type="button" class="ghost btn-sm">Actualizar</button>
+                  <button id="toggle-client-form-btn" type="button" class="btn-primary-sm">+ Nuevo cliente</button>
+                </div>
+              </div>
+
+              <!-- Inline create/edit form -->
+              <div id="client-form-panel" class="client-form-panel" hidden>
+                <form id="client-form">
+                  <input type="hidden" id="client-id" />
+                  <div class="client-form-grid">
+                    <div class="field">
+                      <label class="field-label">Nombre *</label>
+                      <input id="client-name" required />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">CIF/NIF</label>
+                      <input id="client-tax-id" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Direccion</label>
+                      <input id="client-address" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Ciudad</label>
+                      <input id="client-city" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Codigo postal</label>
+                      <input id="client-postal" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Email</label>
+                      <input id="client-email" type="email" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Telefono</label>
+                      <input id="client-phone" />
+                    </div>
+                  </div>
+                  <div class="card-actions end">
+                    <button type="button" id="client-form-reset" class="ghost">Cancelar</button>
+                    <button type="submit" id="client-form-submit">Guardar cliente</button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Search bar -->
+              <div class="clients-searchbar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input id="clients-search" type="text" placeholder="Buscar por nombre o CIF/NIF..." />
+              </div>
+
+              <!-- Clients table -->
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>CIF/NIF</th>
+                      <th>Email</th>
+                      <th>Telefono</th>
+                      <th class="col-action"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="clients-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- ══ DASHBOARD TAB ══ -->
+          <section id="tab-dashboard" class="panel" hidden>
+
+            <!-- 4 KPI cards -->
+            <div class="dashboard-kpis">
+              <div class="kpi-card kpi-pending">
+                <div class="kpi-label">Pendiente de cobro</div>
+                <div class="kpi-value" id="kpi-pending">—</div>
+                <div class="kpi-sub" id="kpi-pending-count"></div>
+              </div>
+              <div class="kpi-card kpi-collected">
+                <div class="kpi-label">Cobrado</div>
+                <div class="kpi-value" id="kpi-collected">—</div>
+                <div class="kpi-sub" id="kpi-collected-count"></div>
+              </div>
+              <div class="kpi-card kpi-drafts">
+                <div class="kpi-label">Borradores</div>
+                <div class="kpi-value" id="kpi-drafts">—</div>
+              </div>
+              <div class="kpi-card kpi-total">
+                <div class="kpi-label">Total facturado</div>
+                <div class="kpi-value" id="kpi-total-invoiced">—</div>
+              </div>
+            </div>
+
+            <!-- Gráfico mensual -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <h3 class="card-title">Ingresos últimos 12 meses</h3>
+              </div>
+              <div id="monthly-chart" class="chart-wrap"></div>
+            </div>
+
+            <!-- Desglose estado + Top clientes -->
+            <div class="dashboard-bottom">
+              <div class="card">
+                <div class="card-header"><h3 class="card-title">Por estado</h3></div>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Estado</th><th class="col-num">Facturas</th><th class="col-num">Total</th></tr></thead>
+                    <tbody id="status-breakdown-body"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h3 class="card-title">Top clientes</h3></div>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Cliente</th><th class="col-num">Facturas</th><th class="col-num">Total</th></tr></thead>
+                    <tbody id="top-clients-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- ══ HISTORY TAB ══ -->
+          <section id="tab-history" class="panel" hidden>
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Historico de facturas</h2>
+              </div>
+              <div class="filters-row">
+                <div class="field">
+                  <label class="field-label">Estado</label>
+                  <select id="filter-status">
+                    <option value="">Todos</option>
+                    <option value="DRAFT">Borrador</option>
+                    <option value="OFFICIAL">Enviada</option>
+                    <option value="PAID">Pagada</option>
+                    <option value="SPECIAL">Especial</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label">Ano</label>
+                  <input id="filter-year" type="number" min="2000" max="2100" placeholder="2026" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Cliente</label>
+                  <select id="filter-client">
+                    <option value="">Todos</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field-label" style="visibility:hidden">.</label>
+                  <div class="inline">
+                    <button id="apply-history-filters" type="button">Aplicar</button>
+                    <button id="clear-history-filters" type="button" class="ghost">Limpiar</button>
+                  </div>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Numero</th>
+                      <th>Cliente</th>
+                      <th>Total</th>
+                      <th>Estado</th>
+                      <th class="col-action"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="history-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+        </div><!-- /.content-area -->
+      </div><!-- /.main-content -->
+    </div><!-- /.app-shell -->
+
+    <!-- ── QUICK CLIENT MODAL ── -->
+    <dialog id="client-modal">
+      <form method="dialog" id="quick-client-form" class="modal-form">
+        <div class="modal-header">
+          <h3>Nuevo cliente rapido</h3>
+        </div>
+        <div class="modal-body">
+          <div class="field">
+            <label class="field-label">Nombre *</label>
+            <input id="quick-client-name" required />
+          </div>
+          <div class="field">
+            <label class="field-label">CIF/NIF</label>
+            <input id="quick-client-tax" />
+          </div>
+          <div class="field">
+            <label class="field-label">Email</label>
+            <input id="quick-client-email" type="email" />
+          </div>
+          <div class="field">
+            <label class="field-label">Telefono</label>
+            <input id="quick-client-phone" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="close-client-modal" class="ghost">Cancelar</button>
+          <button type="submit">Crear cliente</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/app.js?v=2"></script>
+  </body>
+</html>

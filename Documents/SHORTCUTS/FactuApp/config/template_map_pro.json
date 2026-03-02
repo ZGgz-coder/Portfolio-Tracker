@@ -1,0 +1,44 @@
+{
+  "sheet": "Factura",
+  "cells": {
+    "logo_anchor": "B2",
+    "issuer_name": "F2",
+    "issuer_tax_id": "F3",
+    "issuer_address": "F4",
+    "issuer_email": "F5",
+    "issuer_phone": "F6",
+    "issuer_country_currency": "F7",
+    "client_title": "B9",
+    "client_name": "B10",
+    "client_tax_id": "B11",
+    "client_address": "B12",
+    "invoice_title": "B7",
+    "invoice_code": "D7",
+    "issue_date": "I7",
+    "table_header_description": "B15",
+    "table_header_qty": "F15",
+    "table_header_unit": "G15",
+    "table_header_unit_price": "H15",
+    "table_header_subtotal": "I15",
+    "subtotal_label": "G37",
+    "subtotal_value": "I37",
+    "tax_label": "G38",
+    "tax_value": "I38",
+    "total_label": "G39",
+    "total_value": "I39",
+    "iban": "B37",
+    "notes": "B38",
+    "hash": "B39"
+  },
+  "table": {
+    "start_row": 16,
+    "max_rows": 20,
+    "columns": {
+      "description": "B",
+      "qty": "F",
+      "unit": "G",
+      "unit_price": "H",
+      "subtotal": "I"
+    }
+  }
+}
