@@ -3,11 +3,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const STORAGE_KEY = "quantum-wealth-holdings-v2";
 
 const NAV_ITEMS = [
-  { id: "control", label: "Inicio", icon: "home" },
-  { id: "wealth", label: "Patrimonio", icon: "wallet" },
-  { id: "markets", label: "Mercados", icon: "chart" },
-  { id: "strategy", label: "Plan", icon: "target" },
-  { id: "settings", label: "Ajustes", icon: "settings" }
+  { id: "control", label: "Inicio", short: "Inicio", icon: "home" },
+  { id: "wealth", label: "Patrimonio", short: "Patrim.", icon: "wallet" },
+  { id: "markets", label: "Mercados", short: "Merc.", icon: "chart" },
+  { id: "strategy", label: "Plan", short: "Plan", icon: "target" },
+  { id: "settings", label: "Ajustes", short: "Ajustes", icon: "settings" }
 ];
 
 const RANGE_OPTIONS = ["1D", "1M", "1Y"];
@@ -1002,7 +1002,7 @@ export default function App() {
               <span className="icon-wrap">
                 <NavIcon name={item.icon} />
               </span>
-              <small className="item-label">{item.label}</small>
+              <small className="item-label" title={item.label}>{item.short || item.label}</small>
             </button>
           );
         })}
@@ -1027,7 +1027,7 @@ export default function App() {
               <span className="icon-wrap">
                 <NavIcon name={item.icon} />
               </span>
-              <small className="item-label">{item.label}</small>
+              <small className="item-label" title={item.label}>{item.short || item.label}</small>
             </button>
           );
         })}
