@@ -986,20 +986,24 @@ export default function App() {
         </section>
       ) : null}
 
-      <nav className="bottom-nav glass">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            className={`bottom-item ${screen === item.id ? "active" : ""}`}
-            type="button"
-            onClick={() => setScreen(item.id)}
-          >
-            <span className="icon-wrap">
-              <NavIcon name={item.icon} />
-            </span>
-            <small>{item.label}</small>
-          </button>
-        ))}
+      <nav className="bottom-nav glass" aria-label="Navegación principal">
+        {NAV_ITEMS.map((item) => {
+          const isActive = screen === item.id;
+          return (
+            <button
+              key={item.id}
+              className={`bottom-item ${isActive ? "active" : ""}`}
+              type="button"
+              onClick={() => setScreen(item.id)}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <span className="icon-wrap">
+                <NavIcon name={item.icon} />
+              </span>
+              <small className="item-label">{item.label}</small>
+            </button>
+          );
+        })}
       </nav>
     </main>
   );
