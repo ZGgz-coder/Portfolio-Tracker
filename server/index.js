@@ -3,6 +3,8 @@ import express from "express";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
@@ -11,6 +13,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const holdingsPath = path.resolve(__dirname, "../data/holdings.json");
 const expensesPath = path.resolve(__dirname, "../data/expenses.json");
+const legacyExpensesDbPath = "/root/.openclaw/workspace/gastos.db";
+const execFileAsync = promisify(execFile);
 
 app.use(cors());
 app.use(express.json());
@@ -47,6 +51,7 @@ async function saveHoldings(nextHoldings) {
 }
 
 function normalizeExpense(item) {
+  const history = Array.isArray(item?.history) ? item.history : [];
   return {
     id: String(item?.id || ""),
     concepto: String(item?.concepto || "").trim(),
@@ -55,7 +60,16 @@ function normalizeExpense(item) {
     recurrencia: String(item?.recurrencia || "Mensual"),
     dia: Number(item?.dia || 1),
     inicio: String(item?.inicio || ""),
-    metodo: String(item?.metodo || "")
+    metodo: String(item?.metodo || ""),
+    rating: Number(item?.rating || 0),
+    history: history
+      .map((entry) => ({
+        date: String(entry?.date || ""),
+        from: Number(entry?.from || 0),
+        to: Number(entry?.to || 0)
+      }))
+      .filter((entry) => Number.isFinite(entry.from) && Number.isFinite(entry.to))
+      .slice(0, 10)
   };
 }
 
@@ -87,6 +101,39 @@ async function readExpenses() {
 async function saveExpenses(nextExpenses) {
   await mkdir(path.dirname(expensesPath), { recursive: true });
   await writeFile(expensesPath, `${JSON.stringify(nextExpenses, null, 2)}\n`, "utf8");
+}
+
+async function loadLegacyExpensesFromSqlite() {
+  try {
+    const script = `
+import json, sqlite3
+db='${legacyExpensesDbPath}'
+conn=sqlite3.connect(db)
+conn.row_factory=sqlite3.Row
+rows=conn.execute('SELECT id,concepto,monto,categoria,recurrencia,dia,inicio,metodo FROM gastos').fetchall()
+conn.close()
+out=[]
+for r in rows:
+  out.append({
+    'id': r['id'],
+    'concepto': r['concepto'],
+    'monto': r['monto'],
+    'categoria': r['categoria'] or 'Otros',
+    'recurrencia': r['recurrencia'] or 'Mensual',
+    'dia': r['dia'] or 1,
+    'inicio': r['inicio'] or '',
+    'metodo': r['metodo'] or '',
+    'rating': 0,
+    'history': []
+  })
+print(json.dumps(out))
+`;
+    const { stdout } = await execFileAsync("python3", ["-c", script]);
+    const parsed = JSON.parse(stdout || "[]");
+    return Array.isArray(parsed) ? parsed.map(normalizeExpense).filter(isValidExpense) : [];
+  } catch {
+    return [];
+  }
 }
 
 app.get("/api/health", (_req, res) => {
@@ -140,10 +187,27 @@ app.post("/api/holdings", async (req, res) => {
 
 app.get("/api/expenses", async (_req, res) => {
   try {
-    const data = await readExpenses();
+    let data = await readExpenses();
+    if (data.length === 0) {
+      const legacy = await loadLegacyExpensesFromSqlite();
+      if (legacy.length > 0) {
+        data = legacy;
+        await saveExpenses(data);
+      }
+    }
     res.json({ data });
   } catch {
     res.status(500).json({ error: "No se pudieron leer los gastos" });
+  }
+});
+
+app.post("/api/expenses/sync-legacy", async (_req, res) => {
+  try {
+    const legacy = await loadLegacyExpensesFromSqlite();
+    await saveExpenses(legacy);
+    res.json({ data: legacy, synced: true });
+  } catch {
+    res.status(500).json({ error: "No se pudieron sincronizar gastos legacy" });
   }
 });
 
