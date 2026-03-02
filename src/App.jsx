@@ -550,6 +550,8 @@ export default function App() {
     setMessage(`Eliminado ${targetSymbol}`);
   };
 
+  const activeIndex = Math.max(0, NAV_ITEMS.findIndex((item) => item.id === screen));
+
   const importHoldingsCsv = async (file) => {
     if (!file) return;
 
@@ -986,7 +988,32 @@ export default function App() {
         </section>
       ) : null}
 
+      <aside className="side-nav glass" aria-label="Navegación lateral">
+        {NAV_ITEMS.map((item) => {
+          const isActive = screen === item.id;
+          return (
+            <button
+              key={`side-${item.id}`}
+              className={`side-item ${isActive ? "active" : ""}`}
+              type="button"
+              onClick={() => setScreen(item.id)}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <span className="icon-wrap">
+                <NavIcon name={item.icon} />
+              </span>
+              <small className="item-label">{item.label}</small>
+            </button>
+          );
+        })}
+      </aside>
+
       <nav className="bottom-nav glass" aria-label="Navegación principal">
+        <span
+          className="nav-pill"
+          style={{ transform: `translateX(calc(${activeIndex} * (100% + 8px)))` }}
+          aria-hidden="true"
+        />
         {NAV_ITEMS.map((item) => {
           const isActive = screen === item.id;
           return (
