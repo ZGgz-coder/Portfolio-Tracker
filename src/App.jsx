@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import ExpensesPanel from "./components/ExpensesPanel";
 
 const STORAGE_KEY = "quantum-wealth-holdings-v2";
 const THEME_KEY = "quantum-wealth-theme-v1";
@@ -7,6 +8,7 @@ const NAV_ITEMS = [
   { id: "control", label: "Inicio", short: "Inicio", icon: "home" },
   { id: "wealth", label: "Patrimonio", short: "Patrim.", icon: "wallet" },
   { id: "markets", label: "Mercados", short: "Merc.", icon: "chart" },
+  { id: "expenses", label: "Gastos", short: "Gastos", icon: "wallet" },
   { id: "strategy", label: "Plan", short: "Plan", icon: "target" },
   { id: "settings", label: "Ajustes", short: "Ajustes", icon: "settings" }
 ];
@@ -599,12 +601,9 @@ export default function App() {
 
       <header className="topbar glass">
         <div className="profile-block">
-          <div className="avatar">QW</div>
           <div>
-            <p className={`mini-label greeting-tag ${showGreetingTag ? "" : "is-hidden"}`}>
-              Buenos días, {userName}
-            </p>
-            <h2>Bienvenido de nuevo</h2>
+            <p className="mini-label">Quantum Wealth</p>
+            <h2>Dashboard financiero</h2>
           </div>
         </div>
         <button className="icon-btn" type="button">◎</button>
@@ -948,6 +947,8 @@ export default function App() {
         </section>
       ) : null}
 
+      {screen === "expenses" ? <ExpensesPanel /> : null}
+
       {screen === "settings" ? (
         <section className="glass card screen-panel">
           <h3>Ajustes</h3>
@@ -1032,12 +1033,12 @@ export default function App() {
         })}
       </aside>
 
-      <nav className="bottom-nav glass" aria-label="Navegación principal">
-        <span
-          className="nav-pill"
-          style={{ transform: `translateX(calc(${activeIndex} * (100% + 8px)))` }}
-          aria-hidden="true"
-        />
+      <nav
+        className="bottom-nav glass"
+        aria-label="Navegación principal"
+        style={{ "--nav-count": NAV_ITEMS.length, "--nav-index": activeIndex }}
+      >
+        <span className="nav-pill" aria-hidden="true" />
         {NAV_ITEMS.map((item) => {
           const isActive = screen === item.id;
           return (

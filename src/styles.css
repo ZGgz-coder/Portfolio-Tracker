@@ -740,11 +740,11 @@ select {
   left: 50%;
   bottom: 12px;
   transform: translateX(-50%);
-  width: min(94%, 520px);
+  width: min(96%, 640px);
   border-radius: 22px;
   padding: 8px;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--nav-count, 6), minmax(0, 1fr));
   gap: 8px;
   z-index: 10;
   backdrop-filter: blur(20px) saturate(1.25);
@@ -767,11 +767,12 @@ select {
   position: absolute;
   left: 8px;
   top: 8px;
-  width: calc((100% - 16px - 8px * 4) / 5);
+  width: calc((100% - 16px - 8px * (var(--nav-count, 6) - 1)) / var(--nav-count, 6));
   height: 46px;
   border-radius: 14px;
   background: linear-gradient(150deg, rgba(37, 226, 244, 0.97), rgba(133, 246, 255, 0.93));
   box-shadow: 0 0 22px rgba(37, 226, 244, 0.46), 0 8px 20px rgba(16, 88, 97, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transform: translateX(calc(var(--nav-index, 0) * (100% + 8px)));
   transition: transform 320ms cubic-bezier(.2,.9,.2,1);
   z-index: 0;
 }
@@ -911,9 +912,77 @@ select {
   }
 }
 
+.expenses-panel .expenses-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.expenses-panel .expenses-summary strong {
+  font-size: 1.05rem;
+}
+
+.budget-wrap {
+  margin: 10px 0 14px;
+}
+
+.budget-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.budget-head input {
+  max-width: 150px;
+}
+
+.budget-track {
+  margin-top: 8px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.budget-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(89,240,174,0.95), rgba(37,226,244,0.92));
+}
+
+.budget-fill.over {
+  background: linear-gradient(90deg, rgba(255,201,76,0.95), rgba(255,125,144,0.92));
+}
+
+.expenses-split {
+  display: grid;
+  gap: 12px;
+}
+
+.expenses-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.days-chip {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.days-chip.red { background: rgba(255,125,144,0.22); color: #ffd6dc; }
+.days-chip.yellow { background: rgba(242,201,76,0.2); color: #ffe69a; }
+.days-chip.green { background: rgba(89,240,174,0.18); color: #9ef9cc; }
+
+.warn { color: #ffe69a; }
+
 @media (max-width: 680px) {
   .kpi-strip,
-  .quick-grid {
+  .quick-grid,
+  .expenses-panel .expenses-summary {
     grid-template-columns: 1fr;
   }
 
