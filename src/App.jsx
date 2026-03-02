@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const STORAGE_KEY = "quantum-wealth-holdings-v2";
+const THEME_KEY = "quantum-wealth-theme-v1";
 
 const NAV_ITEMS = [
   { id: "control", label: "Inicio", short: "Inicio", icon: "home" },
@@ -115,6 +116,13 @@ function loadUserName() {
   const stored = localStorage.getItem("portfolio-user-name");
   if (stored && stored.trim()) return stored.trim();
   return "Alejandro";
+}
+
+
+function loadTheme() {
+  const stored = localStorage.getItem(THEME_KEY);
+  if (["nocturne", "neon", "titanium"].includes(stored)) return stored;
+  return "nocturne";
 }
 
 function parseCsvLine(line) {
@@ -287,6 +295,7 @@ export default function App() {
   const [csvFileName, setCsvFileName] = useState("");
   const [message, setMessage] = useState("Sigue y ajusta tus posiciones.");
   const [showGreetingTag, setShowGreetingTag] = useState(true);
+  const [theme, setTheme] = useState(() => loadTheme());
   const chartValuesRef = useRef([]);
   const animationRef = useRef(null);
   const userName = useMemo(() => loadUserName(), []);
@@ -550,6 +559,10 @@ export default function App() {
     setMessage(`Eliminado ${targetSymbol}`);
   };
 
+  useEffect(() => {
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
+
   const activeIndex = Math.max(0, NAV_ITEMS.findIndex((item) => item.id === screen));
 
   const importHoldingsCsv = async (file) => {
@@ -581,7 +594,7 @@ export default function App() {
   };
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell theme-${theme}`}>
       <div className="aurora-bg" />
 
       <header className="topbar glass">
@@ -941,6 +954,17 @@ export default function App() {
           <div className="holding-list">
             <article className="glass card holding-row compact"><p>Moneda base</p><small>USD</small></article>
             <article className="glass card holding-row compact"><p>Sincronización de datos</p><small>Modo manual</small></article>
+            <article className="glass card holding-row compact">
+              <div>
+                <p>Tema visual</p>
+                <small>Nocturne · Neon · Titanium</small>
+              </div>
+              <select value={theme} onChange={(event) => setTheme(event.target.value)} style={{ maxWidth: 140 }}>
+                <option value="nocturne">Nocturne</option>
+                <option value="neon">Neon</option>
+                <option value="titanium">Titanium</option>
+              </select>
+            </article>
           </div>
 
           <h3 className="inner-title">Gestión de datos</h3>

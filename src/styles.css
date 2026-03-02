@@ -12,6 +12,36 @@
   --down: #ff7d90;
 }
 
+.theme-nocturne {
+  --primary: #25e2f4;
+  --bg-dark: #020808;
+  --text: #f4ffff;
+  --muted: rgba(223, 242, 244, 0.62);
+  --line: rgba(255, 255, 255, 0.1);
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-strong: rgba(255, 255, 255, 0.07);
+}
+
+.theme-neon {
+  --primary: #46f2ff;
+  --bg-dark: #04040d;
+  --text: #f8f8ff;
+  --muted: rgba(232, 218, 255, 0.68);
+  --line: rgba(182, 134, 255, 0.24);
+  --glass: rgba(160, 103, 255, 0.08);
+  --glass-strong: rgba(98, 236, 255, 0.12);
+}
+
+.theme-titanium {
+  --primary: #9ed2ff;
+  --bg-dark: #0a1018;
+  --text: #eef4ff;
+  --muted: rgba(207, 220, 240, 0.7);
+  --line: rgba(183, 196, 214, 0.22);
+  --glass: rgba(163, 177, 197, 0.08);
+  --glass-strong: rgba(170, 188, 210, 0.14);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -42,6 +72,22 @@ body {
     radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.17) 0%, transparent 44%),
     radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.13) 0%, transparent 52%),
     linear-gradient(170deg, #020808 0%, #051414 55%, #030d10 100%);
+}
+
+.theme-neon .aurora-bg {
+  background:
+    radial-gradient(circle at 16% 24%, rgba(94, 59, 255, 0.24) 0%, transparent 44%),
+    radial-gradient(circle at 80% 70%, rgba(60, 233, 255, 0.2) 0%, transparent 46%),
+    radial-gradient(circle at 52% 10%, rgba(247, 50, 255, 0.13) 0%, transparent 52%),
+    linear-gradient(170deg, #060612 0%, #0f0830 54%, #070b16 100%);
+}
+
+.theme-titanium .aurora-bg {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(146, 176, 214, 0.2) 0%, transparent 42%),
+    radial-gradient(circle at 80% 70%, rgba(115, 147, 190, 0.16) 0%, transparent 44%),
+    radial-gradient(circle at 52% 10%, rgba(176, 191, 214, 0.14) 0%, transparent 52%),
+    linear-gradient(170deg, #0b111a 0%, #121c2b 55%, #0b131d 100%);
 }
 
 .glass {
